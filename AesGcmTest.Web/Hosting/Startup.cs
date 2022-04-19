@@ -9,7 +9,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services
-            .AddSingleton(new List<UserPersistenceModel>())
+            .AddCompletelyInMemoryTenancyEncryptionStorage()
             .AddTransient<IUserRepository, InMemoryUserRepository>()
             .AddMediatR(typeof(Startup).Assembly)
             .AddEndpointsApiExplorer()
