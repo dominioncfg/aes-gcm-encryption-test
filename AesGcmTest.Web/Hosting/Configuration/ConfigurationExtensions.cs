@@ -10,9 +10,10 @@ public static class ConfigurationExtensions
             .AddSingleton(new List<UserEncryptedPersistenceModel>())
             .AddSingleton(new Dictionary<string, AsymmetricEncryptionKeyPairResult>())
             .AddSingleton(new Dictionary<Guid, PersistenceTenancyKeyModel>())
-            
+
             .AddTransient<ITenancyKeyHardwareSecurityModuleService, InMemoryTenancyKeyHardwareSecurityModuleService>()
             .AddTransient<ITenancySymmetricKeyRepository, InMemoryTenancySymmetricKeyRepository>()
-            .AddTransient<ITenancySimmetricKeyService, TenancySimmetricKeyService>();
+            .AddTransient<ITenancySimmetricKeyService, TenancySimmetricKeyService>()
+            .AddTransient<IAuthenticatedEncryptionService, AuthenticatedEncryptionService>();
     }
 }

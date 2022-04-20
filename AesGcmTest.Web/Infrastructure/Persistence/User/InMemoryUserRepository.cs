@@ -1,6 +1,4 @@
 ﻿using AesGcmTest.Domain;
-using System.Text;
-using System.Text.Json;
 
 namespace AesGcmTest.Infrastructure;
 
@@ -8,11 +6,15 @@ public class InMemoryUserRepository : IUserRepository
 {
     private readonly List<UserEncryptedPersistenceModel> _usersStorage;
     private readonly ITenancySimmetricKeyService _tenancySimmetricKeyService;
+    private readonly IAuthenticatedEncryptionService _encryptionService;
 
-    public InMemoryUserRepository(List<UserEncryptedPersistenceModel> usersStorage, ITenancySimmetricKeyService tenancySimmetricKeyService)
+    public InMemoryUserRepository(List<UserEncryptedPersistenceModel> usersStorage, 
+        ITenancySimmetricKeyService tenancySimmetricKeyService,
+        IAuthenticatedEncryptionService encryptionService)
     {
         _usersStorage = usersStorage;
         _tenancySimmetricKeyService = tenancySimmetricKeyService;
+        _encryptionService = encryptionService;
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken)
@@ -29,7 +31,8 @@ public class InMemoryUserRepository : IUserRepository
             throw new Exception("User not found");
 
         var encryptedExistingUser = _usersStorage[persistenceUserIndex];
-        UserEncryptedPersistenceModel encryptedUser = await EncryptUserAsync(user, encryptedExistingUser.Nonce, cancellationToken);
+        var nonce = AesGcmSymmetricEncryption.GetRandomNonce();
+        UserEncryptedPersistenceModel encryptedUser = await EncryptUserAsync(user, nonce.Bytes, cancellationToken);
 
         _usersStorage[persistenceUserIndex] = encryptedUser;
     }
@@ -58,23 +61,31 @@ public class InMemoryUserRepository : IUserRepository
     private async Task<UserEncryptedPersistenceModel> EncryptUserAsync(User user, byte[] nonce, CancellationToken cancellationToken)
     {
         var userPersistence = UserPersistenceDto.FromDomain(user);
-        var encryptPayload = JsonSerializer.Serialize(userPersistence);
-
         var symmetricKey = await _tenancySimmetricKeyService.GetOrCreateTenantSymmetricEncryptionKeyAsync(user.TenantId, cancellationToken);
+        var encryptionRequest = new AuthenticatedEncryptionEncryptRequest()
+        {
+            SymmetricKey = symmetricKey,
+            PayLoad = userPersistence,
+            SchemaVersion = EncryptionSchemaVersions.V1,
+            Nonce = nonce,
 
-        var encryptPayloadBytes = Encoding.UTF8.GetBytes(encryptPayload);
-        var encryptResult = AesGcmSymmetricEncryption.Encrypt(encryptPayloadBytes, symmetricKey, nonce);
+        };
+        var encryptionResult = _encryptionService.Encrypt(encryptionRequest);
 
-        var storageModel = UserEncryptedPersistenceModel.Create(user.TenantId, user.Id, encryptResult.CipherTextInBytes, encryptResult.TagInBytes, nonce);
+        var storageModel = UserEncryptedPersistenceModel.Create(user.TenantId, user.Id, encryptionResult.ComposedEncryptedPayload);
         return storageModel;
     }
 
     private async Task<User> DecryptEncryptedUser(UserEncryptedPersistenceModel userEncrypted, CancellationToken cancellationToken)
     {
-        var symmetricKey = await _tenancySimmetricKeyService.GetOrCreateTenantSymmetricEncryptionKeyAsync(userEncrypted.TenantId, cancellationToken);
-        var decryptPayload = AesGcmSymmetricEncryption.Decrypt(userEncrypted.EncryptedPayload, symmetricKey, userEncrypted.Nonce, userEncrypted.Tag);
-        var str = Encoding.UTF8.GetString(decryptPayload.PlainTextInBytes);
-        var userPersisted = JsonSerializer.Deserialize<UserPersistenceDto>(str) ?? throw new Exception("Fail to Deserialize");
+        var symmetricKey = await _tenancySimmetricKeyService.GetExistingTenantSymmetricEncryptionKeyAsync(userEncrypted.TenantId, cancellationToken);
+        var dectyptRequest = new AuthenticatedEncryptionDecryptRequest()
+        {
+            SchemaVersion = EncryptionSchemaVersions.V1,
+            SymmetricKey = symmetricKey,
+            ComposedEncryptedPayload = userEncrypted.EncryptedPayload,
+        };
+        var userPersisted = _encryptionService.Decrypt<UserPersistenceDto>(dectyptRequest);
         return userPersisted.ToDomain();
     }
 }

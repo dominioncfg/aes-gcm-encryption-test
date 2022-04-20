@@ -19,12 +19,22 @@ public class TenancySimmetricKeyService : ITenancySimmetricKeyService
         if (tenantEncryptionModel is not null)
             return await UnwrapEncryptedKeyAsync(tenantEncryptionModel.HsmKeyId, tenantEncryptionModel.AesGcmEncryptedKey, cancellationToken);
 
-            
+
         var hsmKeyId = await GenerateNewRsaKeyInHsmForTenant(cancellationToken);
         var symmetricKey = await GenerateNewAesGcmEncryptionKeyForTenant(hsmKeyId, cancellationToken);
         await SaveNewEncryptedSymmetricEncryptionKey(tenantId, hsmKeyId, symmetricKey, cancellationToken);
         return symmetricKey.SymmetricKeyPlainTextInBytes;
 
+    }
+
+    public async Task<byte[]> GetExistingTenantSymmetricEncryptionKeyAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var tenantEncryptionModel = await _keysRepo.GetByTenantIdOrDefaultAsync(tenantId, cancellationToken);
+
+        if (tenantEncryptionModel is null)
+            throw new Exception($"Key for tenant {tenantId} dont exist");
+
+        return await UnwrapEncryptedKeyAsync(tenantEncryptionModel.HsmKeyId, tenantEncryptionModel.AesGcmEncryptedKey, cancellationToken);
     }
 
     private async Task<byte[]> UnwrapEncryptedKeyAsync(string hsmKeyId, byte[] symmetricEncryptionKey, CancellationToken cancellationToken)
