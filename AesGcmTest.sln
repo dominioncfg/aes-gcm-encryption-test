@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AesGcmTest.Web", "AesGcmTest.Web\AesGcmTest.Web.csproj", "{0311A99F-42A5-4FA2-904C-741919899BFD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AesGcmTest.Web", "AesGcmTest.Web\AesGcmTest.Web.csproj", "{0311A99F-42A5-4FA2-904C-741919899BFD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AesGcmTest.FunctionalTests", "AesGcmTest.FunctionalTests\AesGcmTest.FunctionalTests.csproj", "{D88AA227-4F6F-487A-BCF0-6CC3C435F4FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{0311A99F-42A5-4FA2-904C-741919899BFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0311A99F-42A5-4FA2-904C-741919899BFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0311A99F-42A5-4FA2-904C-741919899BFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D88AA227-4F6F-487A-BCF0-6CC3C435F4FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D88AA227-4F6F-487A-BCF0-6CC3C435F4FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D88AA227-4F6F-487A-BCF0-6CC3C435F4FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D88AA227-4F6F-487A-BCF0-6CC3C435F4FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
