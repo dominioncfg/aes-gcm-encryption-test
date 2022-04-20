@@ -52,5 +52,16 @@ namespace AesGcmTest.Web.Presentation
                 Users = responseUserItems,
             };
         }
+
+        [HttpPut("{id}/rotate-key")]
+        public async Task<IActionResult> RotateKeyAsync([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var cmd = new RotateTenantEncryptionKeyCommand()
+            {
+                TenantId = id,
+            };
+            await _sender.Send(cmd, cancellationToken);
+            return NoContent();
+        }
     }
 }

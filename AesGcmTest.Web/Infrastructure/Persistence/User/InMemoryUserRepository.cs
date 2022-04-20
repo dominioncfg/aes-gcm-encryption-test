@@ -1,19 +1,20 @@
-﻿using AesGcmTest.Domain;
+﻿using AesGcmTest.Application;
+using AesGcmTest.Domain;
 
 namespace AesGcmTest.Infrastructure;
 
 public class InMemoryUserRepository : IUserRepository
 {
     private readonly List<UserEncryptedPersistenceModel> _usersStorage;
-    private readonly ITenancySimmetricKeyService _tenancySimmetricKeyService;
+    private readonly ITenancySymmetricKeyService _tenancySymmetricKeyService;
     private readonly IAuthenticatedEncryptionService _encryptionService;
 
     public InMemoryUserRepository(List<UserEncryptedPersistenceModel> usersStorage, 
-        ITenancySimmetricKeyService tenancySimmetricKeyService,
+        ITenancySymmetricKeyService tenancySimmetricKeyService,
         IAuthenticatedEncryptionService encryptionService)
     {
         _usersStorage = usersStorage;
-        _tenancySimmetricKeyService = tenancySimmetricKeyService;
+        _tenancySymmetricKeyService = tenancySimmetricKeyService;
         _encryptionService = encryptionService;
     }
 
@@ -61,7 +62,7 @@ public class InMemoryUserRepository : IUserRepository
     private async Task<UserEncryptedPersistenceModel> EncryptUserAsync(User user, byte[] nonce, CancellationToken cancellationToken)
     {
         var userPersistence = UserPersistenceDto.FromDomain(user);
-        var symmetricKey = await _tenancySimmetricKeyService.GetOrCreateTenantSymmetricEncryptionKeyAsync(user.TenantId, cancellationToken);
+        var symmetricKey = await _tenancySymmetricKeyService.GetOrCreateTenantSymmetricEncryptionKeyAsync(user.TenantId, cancellationToken);
         var encryptionRequest = new AuthenticatedEncryptionEncryptRequest()
         {
             SymmetricKey = symmetricKey,
@@ -78,7 +79,7 @@ public class InMemoryUserRepository : IUserRepository
 
     private async Task<User> DecryptEncryptedUser(UserEncryptedPersistenceModel userEncrypted, CancellationToken cancellationToken)
     {
-        var symmetricKey = await _tenancySimmetricKeyService.GetExistingTenantSymmetricEncryptionKeyAsync(userEncrypted.TenantId, cancellationToken);
+        var symmetricKey = await _tenancySymmetricKeyService.GetExistingTenantSymmetricEncryptionKeyAsync(userEncrypted.TenantId, cancellationToken);
         var dectyptRequest = new AuthenticatedEncryptionDecryptRequest()
         {
             SchemaVersion = EncryptionSchemaVersions.V1,

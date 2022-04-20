@@ -1,4 +1,5 @@
-﻿using AesGcmTest.Infrastructure;
+﻿using AesGcmTest.Application;
+using AesGcmTest.Infrastructure;
 
 namespace AesGcmTest.Web.Hosting;
 
@@ -9,11 +10,11 @@ public static class ConfigurationExtensions
         return services
             .AddSingleton(new List<UserEncryptedPersistenceModel>())
             .AddSingleton(new Dictionary<string, AsymmetricEncryptionKeyPairResult>())
-            .AddSingleton(new Dictionary<Guid, PersistenceTenancyKeyModel>())
+            .AddSingleton(new List<PersistenceTenancyKeyModel>())
 
             .AddTransient<ITenancyKeyHardwareSecurityModuleService, InMemoryTenancyKeyHardwareSecurityModuleService>()
             .AddTransient<ITenancySymmetricKeyRepository, InMemoryTenancySymmetricKeyRepository>()
-            .AddTransient<ITenancySimmetricKeyService, TenancySimmetricKeyService>()
+            .AddTransient<ITenancySymmetricKeyService, TenancySymmetricKeyService>()
             .AddTransient<IAuthenticatedEncryptionService, AuthenticatedEncryptionService>();
     }
 }

@@ -13,7 +13,7 @@ public class InMemoryTenancyKeyHardwareSecurityModuleService : ITenancyKeyHardwa
     {
         var keyId = GenerateRandomStorageKey();
         var keyResult = RsaAsymmetricEncryption.CreateKeyPair(RsaKeySize);
-        
+
         _hsmKeyStorage.Add(keyId, keyResult);
 
         return Task.FromResult(new GenerateTenantRsaKeyResponse()
@@ -28,12 +28,24 @@ public class InMemoryTenancyKeyHardwareSecurityModuleService : ITenancyKeyHardwa
         var rsaKey = _hsmKeyStorage[wrapSymmetricKeyRequest.TenantRsaKeyId];
 
         var symmetricKey = CryptographicKey.CreateRandomOfBytes(wrapSymmetricKeyRequest.SymmetricKeyLengthInBytes);
-        
+
         var encryptedSymmeticKey = RsaAsymmetricEncryption.Encrypt(symmetricKey.Bytes, rsaKey.PublicKeyInBytes);
 
         return Task.FromResult(new GenerateWrappedSymmetricKeyResponse()
         {
             SymmetricKeyPlainTextInBytes = symmetricKey.Bytes,
+            SymmetricKeyCipherTextInBytes = encryptedSymmeticKey.ChipherTextInBytes,
+        });
+    }
+
+    public Task<WrapSymmetricKeyResponse> WrapSymmetricKeyAsync(WrapSymmetricKeyRequest wrapSymmetricKeyRequest, CancellationToken cancellationToken)
+    {
+        MakeSureKeyIsExists(wrapSymmetricKeyRequest.TenantRsaKeyId);
+        var rsaKey = _hsmKeyStorage[wrapSymmetricKeyRequest.TenantRsaKeyId];
+        var encryptedSymmeticKey = RsaAsymmetricEncryption.Encrypt(wrapSymmetricKeyRequest.SymmetricKey, rsaKey.PublicKeyInBytes);
+
+        return Task.FromResult(new WrapSymmetricKeyResponse()
+        {
             SymmetricKeyCipherTextInBytes = encryptedSymmeticKey.ChipherTextInBytes,
         });
     }
