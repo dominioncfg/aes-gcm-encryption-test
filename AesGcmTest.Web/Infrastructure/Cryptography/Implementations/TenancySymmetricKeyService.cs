@@ -66,7 +66,7 @@ public class TenancySymmetricKeyService : ITenancySymmetricKeyService
             TenantRsaKeyId = hsmKeyId,
             WrappedSymmetricKeyCipherTextInBytes = symmetricEncryptionKey,
         };
-        var aesGcmKey = await _hsm.UnrapSymmetricKeyAsync(unwrapRequest, cancellationToken);
+        var aesGcmKey = await _hsm.UnwrapSymmetricKeyAsync(unwrapRequest, cancellationToken);
         return aesGcmKey.SymmetricKeyPlainTextInBytes;
     }
 

@@ -9,8 +9,8 @@ public static class ResetApplicationHostTestServerFixtureExtensions
     {
         await given.ExecuteScopeAsync(services =>
         {
-            var storage = services.GetRequiredService<Dictionary<string, AsymmetricEncryptionKeyPairResult>>();
-            storage.Clear();
+           var storage = services.GetService<Dictionary<string, AsymmetricEncryptionKeyPairResult>>();
+           storage?.Clear();
             return Task.CompletedTask;
         });
     }

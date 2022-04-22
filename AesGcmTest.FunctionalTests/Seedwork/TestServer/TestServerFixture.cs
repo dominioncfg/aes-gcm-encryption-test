@@ -1,6 +1,7 @@
 ﻿using AesGcmTest.Web.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace AesGcmTest.FunctionalTests.Seedwork;
@@ -30,6 +31,12 @@ public sealed class TestServerFixture : IDisposable
     private static IHostBuilder ConfigureHost()
     {
         return new HostBuilder()
+            .ConfigureAppConfiguration((context, builder) =>
+            {
+                  builder
+                     .SetBasePath(context.HostingEnvironment.ContentRootPath)
+                     .AddJsonFile("appsettings.json");
+            })
             .UseEnvironment("Test")
             .ConfigureServices(services =>
             {

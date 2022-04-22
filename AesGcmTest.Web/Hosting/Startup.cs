@@ -6,10 +6,16 @@ namespace AesGcmTest.Web.Hosting;
 
 public class Startup
 {
+    private readonly IConfiguration _configuration;
+    public Startup(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
     public void ConfigureServices(IServiceCollection services)
     {
         services
-            .AddCompletelyInMemoryTenancyEncryptionStorage()
+            //.AddCompletelyInMemoryTenancyEncryptionStorage()
+            .AddWithAwsHsmTenancyEncryptionStorage(_configuration)
             .AddTransient<IUserRepository, InMemoryUserRepository>()
             .AddMediatR(typeof(Startup).Assembly)
             .AddEndpointsApiExplorer()

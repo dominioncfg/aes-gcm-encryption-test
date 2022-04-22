@@ -50,7 +50,7 @@ public class InMemoryTenancyKeyHardwareSecurityModuleService : ITenancyKeyHardwa
         });
     }
 
-    public Task<UnwrapTenantSymmetricKeyResponse> UnrapSymmetricKeyAsync(UnwrapTenantSymmetricKeyRequest unwrapSymmetricKeyRequest, CancellationToken cancellationToken)
+    public Task<UnwrapTenantSymmetricKeyResponse> UnwrapSymmetricKeyAsync(UnwrapTenantSymmetricKeyRequest unwrapSymmetricKeyRequest, CancellationToken cancellationToken)
     {
         MakeSureKeyIsExists(unwrapSymmetricKeyRequest.TenantRsaKeyId);
         var rsaKey = _hsmKeyStorage[unwrapSymmetricKeyRequest.TenantRsaKeyId];

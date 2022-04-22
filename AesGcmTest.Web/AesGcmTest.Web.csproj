@@ -12,4 +12,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.0" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.2.70" />
+  </ItemGroup>
+
 </Project>
