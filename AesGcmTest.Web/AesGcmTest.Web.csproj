@@ -1,20 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>76c13b77-0e1a-4e0e-a047-4714be9f5d8f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.6.0" />
     <PackageReference Include="MediatR" Version="10.0.1" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.0" />
   </ItemGroup>
 
-
   <ItemGroup>
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.2.70" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

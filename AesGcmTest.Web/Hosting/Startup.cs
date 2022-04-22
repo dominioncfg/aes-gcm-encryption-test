@@ -16,6 +16,7 @@ public class Startup
         services
             //.AddCompletelyInMemoryTenancyEncryptionStorage()
             .AddWithAwsHsmTenancyEncryptionStorage(_configuration)
+            //.AddWithAzureKeyVaultHsmTenancyEncryptionStorage(_configuration)
             .AddTransient<IUserRepository, InMemoryUserRepository>()
             .AddMediatR(typeof(Startup).Assembly)
             .AddEndpointsApiExplorer()

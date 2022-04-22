@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System.Reflection;
 
 namespace AesGcmTest.FunctionalTests.Seedwork;
 
@@ -35,7 +36,8 @@ public sealed class TestServerFixture : IDisposable
             {
                   builder
                      .SetBasePath(context.HostingEnvironment.ContentRootPath)
-                     .AddJsonFile("appsettings.json");
+                     .AddJsonFile("appsettings.json")
+                     .AddUserSecrets(typeof(Startup).GetTypeInfo().Assembly);
             })
             .UseEnvironment("Test")
             .ConfigureServices(services =>
