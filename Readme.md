@@ -24,7 +24,7 @@ A reference application for tenant-based encryption using:
     2. Inside AddInfrastructure use this version: return services.AddWithAwsHsmTenancyEncryptionStorage(configuration);
     3. Update app config or User Secrets with the corresponding Key Vault setting. (You need to create a service provider inside azure and give permissions to your vault).
 
-### Example Azure Key Vauyt Configuration
+### Example Azure Key Vault Configuration
 
     "azureKeyVault": 
     {
