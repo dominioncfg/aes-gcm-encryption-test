@@ -15,7 +15,7 @@ public static class ConfigurationExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddCommonServices(configuration);
-        return services.AddCompletelyInMemoryTenancyEncryptionStorage();
+        return services.AddCompletelyLocalHsmEncryptionStorage();
         //return services.AddWithAwsHsmTenancyEncryptionStorage(configuration);
         //return services.AddWithAzureKeyVaultHsmTenancyEncryptionStorage(configuration);
 
@@ -55,7 +55,7 @@ public static class ConfigurationExtensions
         await serviceScope.ServiceProvider.GetRequiredService<AesGcmDbContext>().Database.MigrateAsync();
     }
    
-    private static IServiceCollection AddCompletelyInMemoryTenancyEncryptionStorage(this IServiceCollection services)
+    private static IServiceCollection AddCompletelyLocalHsmEncryptionStorage(this IServiceCollection services)
     {
         return services
             .AddTransient<IRsaKeyLocalRepository, RsaKeyLocalRepository>()
