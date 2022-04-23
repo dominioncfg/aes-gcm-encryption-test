@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AesGcmTest.Web.Infrastructure.Migrations
 {
     [DbContext(typeof(AesGcmDbContext))]
-    [Migration("20220423101207_InitialDb")]
+    [Migration("20220423123852_InitialDb")]
     partial class InitialDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,9 @@ namespace AesGcmTest.Web.Infrastructure.Migrations
                     b.Property<string>("FriendlyKeyId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<byte[]>("PrivateKey")
                         .IsRequired()

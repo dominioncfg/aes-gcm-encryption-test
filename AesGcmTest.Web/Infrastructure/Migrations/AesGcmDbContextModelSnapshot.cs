@@ -32,6 +32,9 @@ namespace AesGcmTest.Web.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<byte[]>("PrivateKey")
                         .IsRequired()
                         .HasColumnType("bytea");

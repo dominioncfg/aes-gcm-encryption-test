@@ -62,5 +62,11 @@ public class LocalTenancyKeyHardwareSecurityModuleService : ITenancyKeyHardwareS
         };
     }
 
+    public async Task RemoveTenantKeyAsync(RemoveTenantIdRequest removeKeyRequest, CancellationToken cancellationToken)
+    {
+        var rsaKey = await _keysRepo.GetByFriendlyIdAsync(removeKeyRequest.TenantRsaKeyId, cancellationToken);
+        await _keysRepo.DeleteAsync(rsaKey, cancellationToken);
+    }
+
     private static string GenerateRandomStorageKey() => $"urn:enc_companty:hsm_key:{Guid.NewGuid()}";
 }

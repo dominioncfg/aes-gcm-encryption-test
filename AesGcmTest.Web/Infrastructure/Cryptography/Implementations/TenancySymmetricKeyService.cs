@@ -59,6 +59,7 @@ public class TenancySymmetricKeyService : ITenancySymmetricKeyService
         await _keysRepo.UpdateAsync(existingTenantEncryptionModel, cancellationToken);
         await _keysRepo.AddAsync(newKeyModel, cancellationToken);
         await _keysRepo.SaveChangesAsync(cancellationToken);
+        await _hsm.RemoveTenantKeyAsync(new RemoveTenantIdRequest { TenantRsaKeyId = existingTenantEncryptionModel.HsmKeyId }, cancellationToken);
     }
 
     private async Task<byte[]> UnwrapEncryptedKeyAsync(string hsmKeyId, byte[] symmetricEncryptionKey, CancellationToken cancellationToken)

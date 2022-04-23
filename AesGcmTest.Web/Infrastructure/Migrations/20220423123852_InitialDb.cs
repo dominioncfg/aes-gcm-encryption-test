@@ -23,7 +23,8 @@ namespace AesGcmTest.Web.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FriendlyKeyId = table.Column<string>(type: "text", nullable: false),
                     PrivateKey = table.Column<byte[]>(type: "bytea", nullable: false),
-                    PublicKey = table.Column<byte[]>(type: "bytea", nullable: false)
+                    PublicKey = table.Column<byte[]>(type: "bytea", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {

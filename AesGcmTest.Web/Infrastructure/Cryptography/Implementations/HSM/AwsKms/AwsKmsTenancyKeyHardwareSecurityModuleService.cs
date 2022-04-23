@@ -85,4 +85,16 @@ public class AwsKmsTenancyKeyHardwareSecurityModuleService : ITenancyKeyHardware
             SymmetricKeyPlainTextInBytes = awsResponse.Plaintext.ToArray(),
         };
     }
+
+    public Task RemoveTenantKeyAsync(RemoveTenantIdRequest removeKeyRequest, CancellationToken cancellationToken)
+    {
+        //Local Stack AWS returns error :(
+        //var awsRequest = new ScheduleKeyDeletionRequest()
+        //{
+        //    KeyId = removeKeyRequest.TenantRsaKeyId,
+        //    PendingWindowInDays = 7,
+        //};
+        //await _keyManagementServiceClient.ScheduleKeyDeletionAsync(awsRequest, cancellationToken);
+        return Task.CompletedTask;
+    }
 }

@@ -68,6 +68,13 @@ public class AzureKeyVaultTenancyKeyHardwareSecurityModuleService : ITenancyKeyH
         };
     }
 
+    public async Task RemoveTenantKeyAsync(RemoveTenantIdRequest removeKeyRequest, CancellationToken cancellationToken)
+    {
+        var keyName = GetKeyNameFromId(removeKeyRequest.TenantRsaKeyId);
+        var azureResponse = await _azureKeyClient.StartDeleteKeyAsync(keyName, cancellationToken);
+        azureResponse.WaitForCompletion(cancellationToken);
+    }
+
     private static string GenerateRandomStorageKey() => $"urn--enc-companty--hsm--{Guid.NewGuid()}";
 
     private CryptographyClient GetKeyCryptographyClient(string keyId)
@@ -75,5 +82,12 @@ public class AzureKeyVaultTenancyKeyHardwareSecurityModuleService : ITenancyKeyH
         var credentials = new ClientSecretCredential(_azureKvOptions.TenantId, _azureKvOptions.ClientId, _azureKvOptions.ClientSecret);
         var cryptoKeyClient = new CryptographyClient(new Uri(keyId), credentials);
         return cryptoKeyClient;
+    }
+
+    private static string GetKeyNameFromId(string keyId)
+    {
+        var splitted = keyId.Split('/').ToArray();
+        var keyNameIndex = splitted.Length - 2;
+        return splitted[keyNameIndex];
     }
 }

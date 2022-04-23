@@ -15,8 +15,8 @@ public static class ConfigurationExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddCommonServices(configuration);
-        //return services.AddCompletelyInMemoryTenancyEncryptionStorage();
-        return services.AddWithAwsHsmTenancyEncryptionStorage(configuration);
+        return services.AddCompletelyInMemoryTenancyEncryptionStorage();
+        //return services.AddWithAwsHsmTenancyEncryptionStorage(configuration);
         //return services.AddWithAzureKeyVaultHsmTenancyEncryptionStorage(configuration);
 
     }

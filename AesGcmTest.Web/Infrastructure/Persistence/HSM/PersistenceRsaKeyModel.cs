@@ -6,6 +6,7 @@ public class PersistenceRsaKeyModel
     public string FriendlyKeyId { get; } = string.Empty;
     public byte[] PrivateKey { get; } = Array.Empty<byte>();
     public byte[] PublicKey { get; } = Array.Empty<byte>();
+    public bool IsActive { get; private set; }
 
     protected PersistenceRsaKeyModel() { }
 
@@ -15,7 +16,10 @@ public class PersistenceRsaKeyModel
         FriendlyKeyId = friendlyKeyId;
         PrivateKey = privateKey;
         PublicKey = publicKey;
+        IsActive = true;
     }
+
+    public void Disable() => IsActive = false;
 
     public static PersistenceRsaKeyModel Create(string friendlyKeyId, byte[] privateKey, byte[] publicKey)
     {
