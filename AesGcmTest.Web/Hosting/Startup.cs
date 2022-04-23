@@ -14,10 +14,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services
-            //.AddCompletelyInMemoryTenancyEncryptionStorage()
-            .AddWithAwsHsmTenancyEncryptionStorage(_configuration)
-            //.AddWithAzureKeyVaultHsmTenancyEncryptionStorage(_configuration)
-            .AddTransient<IUserRepository, InMemoryUserRepository>()
+            .AddInfrastructure(_configuration)
             .AddMediatR(typeof(Startup).Assembly)
             .AddEndpointsApiExplorer()
             .AddSwaggerGen()
@@ -28,6 +25,7 @@ public class Startup
     public void Configure(IApplicationBuilder app)
     {
         app
+            .InitializeDatabase()
             .UseSwagger()
             .UseSwaggerUI(options =>
             {

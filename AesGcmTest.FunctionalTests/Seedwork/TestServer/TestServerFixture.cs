@@ -14,9 +14,7 @@ public sealed class TestServerFixture : IDisposable
 
     public static void OnTestInitResetApplicationState()
     {
-        FixtureInstance!.OnTestInitClearHsm().GetAwaiter().GetResult();
-        FixtureInstance!.OnTestInitClearTenantEncryptionKeys().GetAwaiter().GetResult();
-        FixtureInstance!.OnTestInitClearUsers().GetAwaiter().GetResult();
+        FixtureInstance!.OnTestInitClearPostgreSqlDb().GetAwaiter().GetResult();
     }
 
     public TestServerFixture()

@@ -1,29 +1,68 @@
 ﻿using AesGcmTest.Application;
+using AesGcmTest.Domain;
 using AesGcmTest.Infrastructure;
 using Amazon.KeyManagementService;
 using Amazon.Runtime;
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AesGcmTest.Web.Hosting;
 
 public static class ConfigurationExtensions
 {
-    public static IServiceCollection AddCompletelyInMemoryTenancyEncryptionStorage(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddCommonServices(configuration);
+        //return services.AddCompletelyInMemoryTenancyEncryptionStorage();
+        return services.AddWithAwsHsmTenancyEncryptionStorage(configuration);
+        //return services.AddWithAzureKeyVaultHsmTenancyEncryptionStorage(configuration);
+
+    }
+
+    public static IApplicationBuilder InitializeDatabase(this IApplicationBuilder app)
+    {
+        var serviceFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
+
+        using var serviceScope = serviceFactory.CreateScope();
+        MigrateEncryptedDatabaseAsync(serviceScope).GetAwaiter().GetResult();
+        return app;
+    }
+
+    private static IServiceCollection AddCommonServices(this IServiceCollection services, IConfiguration configuration)
     {
         return services
-            .AddSingleton(new List<UserEncryptedPersistenceModel>())
-            .AddSingleton(new Dictionary<string, AsymmetricEncryptionKeyPairResult>())
-            .AddSingleton(new List<PersistenceTenancyKeyModel>())
-
-            .AddTransient<ITenancyKeyHardwareSecurityModuleService, InMemoryTenancyKeyHardwareSecurityModuleService>()
-            .AddTransient<ITenancySymmetricKeyRepository, InMemoryTenancySymmetricKeyRepository>()
+            .AddEncryptedDbContext(configuration)
+            .AddTransient<IUserRepository, EncryptedUserRepository>()
+            .AddTransient<ITenancySymmetricKeyRepository, TenancySymmetricKeyRepository>()
             .AddTransient<ITenancySymmetricKeyService, TenancySymmetricKeyService>()
             .AddTransient<IAuthenticatedEncryptionService, AuthenticatedEncryptionService>();
     }
 
-    public static IServiceCollection AddWithAwsHsmTenancyEncryptionStorage(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddEncryptedDbContext(this IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("EncrytedDb");
+        IServiceCollection serviceCollection = services.AddDbContext<AesGcmDbContext>(options =>
+            options
+                .UseNpgsql(connectionString)
+            );
+        return services;
+    }
+
+    private static async Task MigrateEncryptedDatabaseAsync(IServiceScope serviceScope)
+    {
+        await serviceScope.ServiceProvider.GetRequiredService<AesGcmDbContext>().Database.MigrateAsync();
+    }
+   
+    private static IServiceCollection AddCompletelyInMemoryTenancyEncryptionStorage(this IServiceCollection services)
+    {
+        return services
+            .AddTransient<IRsaKeyLocalRepository, RsaKeyLocalRepository>()
+            .AddTransient<ITenancyKeyHardwareSecurityModuleService, LocalTenancyKeyHardwareSecurityModuleService>();
+    }
+
+    private static IServiceCollection AddWithAwsHsmTenancyEncryptionStorage(this IServiceCollection services, IConfiguration configuration)
     {
         var awsOptions = new AwsKeyManagementClientConfiguration();
         configuration.GetSection(AwsKeyManagementClientConfiguration.Section).Bind(awsOptions);
@@ -40,15 +79,10 @@ public static class ConfigurationExtensions
                 };
                 return new AmazonKeyManagementServiceClient(creadentials, config);
             })
-            .AddSingleton(new List<UserEncryptedPersistenceModel>())
-            .AddSingleton(new List<PersistenceTenancyKeyModel>())
-            .AddTransient<ITenancyKeyHardwareSecurityModuleService, AwsKmsTenancyKeyHardwareSecurityModuleService>()
-            .AddTransient<ITenancySymmetricKeyRepository, InMemoryTenancySymmetricKeyRepository>()
-            .AddTransient<ITenancySymmetricKeyService, TenancySymmetricKeyService>()
-            .AddTransient<IAuthenticatedEncryptionService, AuthenticatedEncryptionService>();
+            .AddTransient<ITenancyKeyHardwareSecurityModuleService, AwsKmsTenancyKeyHardwareSecurityModuleService>();
     }
 
-    public static IServiceCollection AddWithAzureKeyVaultHsmTenancyEncryptionStorage(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddWithAzureKeyVaultHsmTenancyEncryptionStorage(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<AzureKeyVaultKeyClientConfiguration>(configuration.GetSection(AzureKeyVaultKeyClientConfiguration.Section));
         return services
@@ -58,11 +92,6 @@ public static class ConfigurationExtensions
                 var credentials = new ClientSecretCredential(azureOptions.TenantId, azureOptions.ClientId, azureOptions.ClientSecret);
                 return new KeyClient(new Uri(azureOptions.VaultUrl), credentials);
             })
-            .AddSingleton(new List<UserEncryptedPersistenceModel>())
-            .AddSingleton(new List<PersistenceTenancyKeyModel>())
-            .AddTransient<ITenancyKeyHardwareSecurityModuleService, AzureKeyVaultTenancyKeyHardwareSecurityModuleService>()
-            .AddTransient<ITenancySymmetricKeyRepository, InMemoryTenancySymmetricKeyRepository>()
-            .AddTransient<ITenancySymmetricKeyService, TenancySymmetricKeyService>()
-            .AddTransient<IAuthenticatedEncryptionService, AuthenticatedEncryptionService>();
+            .AddTransient<ITenancyKeyHardwareSecurityModuleService, AzureKeyVaultTenancyKeyHardwareSecurityModuleService>();            
     }
 }

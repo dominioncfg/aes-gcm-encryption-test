@@ -1,38 +1,18 @@
 ﻿using AesGcmTest.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AesGcmTest.FunctionalTests.Seedwork;
 
 public static class ResetApplicationHostTestServerFixtureExtensions
 {
-    public static async Task OnTestInitClearHsm(this TestServerFixture given)
+    public static async Task OnTestInitClearPostgreSqlDb(this TestServerFixture given)
     {
-        await given.ExecuteScopeAsync(services =>
+        await given!.ExecuteScopeAsync(async services =>
         {
-           var storage = services.GetService<Dictionary<string, AsymmetricEncryptionKeyPairResult>>();
-           storage?.Clear();
-            return Task.CompletedTask;
+            var dataStorage = services.GetRequiredService<AesGcmDbContext>();
+            await dataStorage.Database.EnsureDeletedAsync();
+            await dataStorage.Database.MigrateAsync();
         });
-    }
-
-    public static async Task OnTestInitClearTenantEncryptionKeys(this TestServerFixture given)
-    {
-        await given.ExecuteScopeAsync(services =>
-        {
-            var storage = services.GetRequiredService<List<PersistenceTenancyKeyModel>>();
-            storage.Clear();
-            return Task.CompletedTask;
-        });
-    }
-
-    public static async Task OnTestInitClearUsers(this TestServerFixture given)
-    {
-        await given.ExecuteScopeAsync(services =>
-        {
-            var storage = services.GetRequiredService<List<UserEncryptedPersistenceModel>>();
-            storage.Clear();
-            return Task.CompletedTask;
-        });
-    }
-
+    } 
 }

@@ -1,19 +1,20 @@
 ﻿using AesGcmTest.Application;
 using AesGcmTest.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace AesGcmTest.Infrastructure;
 
-public class InMemoryUserRepository : IUserRepository
+public class EncryptedUserRepository : IUserRepository
 {
-    private readonly List<UserEncryptedPersistenceModel> _usersStorage;
+    private readonly AesGcmDbContext _dbContext;
     private readonly ITenancySymmetricKeyService _tenancySymmetricKeyService;
     private readonly IAuthenticatedEncryptionService _encryptionService;
 
-    public InMemoryUserRepository(List<UserEncryptedPersistenceModel> usersStorage, 
+    public EncryptedUserRepository(AesGcmDbContext dbContext,
         ITenancySymmetricKeyService tenancySimmetricKeyService,
         IAuthenticatedEncryptionService encryptionService)
     {
-        _usersStorage = usersStorage;
+        _dbContext = dbContext;
         _tenancySymmetricKeyService = tenancySimmetricKeyService;
         _encryptionService = encryptionService;
     }
@@ -22,33 +23,36 @@ public class InMemoryUserRepository : IUserRepository
     {
         var nonce = AesGcmSymmetricEncryption.GetRandomNonce();
         UserEncryptedPersistenceModel encryptedUser = await EncryptUserAsync(user, nonce.Bytes, cancellationToken);
-        _usersStorage.Add(encryptedUser);
+
+        await _dbContext.AddAsync(encryptedUser, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken)
     {
-        var persistenceUserIndex = _usersStorage.FindIndex(x => x.Id == user.Id);
-        if (persistenceUserIndex == -1)
-            throw new Exception("User not found");
-
-        var encryptedExistingUser = _usersStorage[persistenceUserIndex];
         var nonce = AesGcmSymmetricEncryption.GetRandomNonce();
         UserEncryptedPersistenceModel encryptedUser = await EncryptUserAsync(user, nonce.Bytes, cancellationToken);
 
-        _usersStorage[persistenceUserIndex] = encryptedUser;
+        _dbContext.Update(encryptedUser);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<User> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var userEncrypted = _usersStorage.FirstOrDefault(x => x.Id == id) ?? throw new Exception("User not found");
+        var userEncrypted = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (userEncrypted is null)
+            throw new Exception("User not found");
+
         return await DecryptEncryptedUser(userEncrypted, cancellationToken);
     }
 
     public async Task<IEnumerable<User>> GetAllByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        var tenantEncryptedUsers = _usersStorage
+        var tenantEncryptedUsers = await _dbContext
+            .Users
+            .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         var users = new List<User>();
         foreach (var userEncrypted in tenantEncryptedUsers)

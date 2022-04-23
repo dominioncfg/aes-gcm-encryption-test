@@ -1,0 +1,10 @@
+﻿** Start
+docker-compose -p encryption-test up --build --detach
+
+** Stop
+docker-compose -p encryption-test down --volumes 
+
+* Usefull dotnet Commands EF:
+
+** Add new migration
+dotnet ef migrations add InitialDb --project AesGcmTest.Web  --startup-project AesGcmTest.Web -c AesGcmDbContext -o Infrastructure/Migrations

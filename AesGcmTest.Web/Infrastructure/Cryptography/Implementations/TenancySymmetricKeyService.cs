@@ -26,7 +26,6 @@ public class TenancySymmetricKeyService : ITenancySymmetricKeyService
         var symmetricKey = await GenerateNewAesGcmEncryptionKeyForTenant(hsmKeyId, cancellationToken);
         await SaveNewEncryptedSymmetricEncryptionKey(tenantId, hsmKeyId, symmetricKey, cancellationToken);
         return symmetricKey.SymmetricKeyPlainTextInBytes;
-
     }
 
     public async Task<byte[]> GetExistingTenantSymmetricEncryptionKeyAsync(Guid tenantId, CancellationToken cancellationToken)
@@ -41,7 +40,12 @@ public class TenancySymmetricKeyService : ITenancySymmetricKeyService
 
     public async Task RotateSymmetricEncryptionKeyAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        var existingUnwrappedTenantKey = await GetExistingTenantSymmetricEncryptionKeyAsync(tenantId, cancellationToken);
+        var existingTenantEncryptionModel = await _keysRepo.GetByTenantIdOrDefaultAsync(tenantId, cancellationToken);
+
+        if (existingTenantEncryptionModel is null)
+            throw new Exception($"Key for tenant {tenantId} dont exist");
+
+        var existingUnwrappedTenantKey = await UnwrapEncryptedKeyAsync(existingTenantEncryptionModel.HsmKeyId, existingTenantEncryptionModel.AesGcmEncryptedKey, cancellationToken);
         var tenantNewRsaKeyId = await GenerateNewRsaKeyInHsmForTenant(cancellationToken);
         var request = new WrapSymmetricKeyRequest()
         {
@@ -49,14 +53,12 @@ public class TenancySymmetricKeyService : ITenancySymmetricKeyService
             SymmetricKey = existingUnwrappedTenantKey,
         };
         var keyResponse = await _hsm.WrapSymmetricKeyAsync(request, cancellationToken);
-        var storageModel = new PersistenceTenancyKeyModel()
-        {
-            TenantId = tenantId,
-            HsmKeyId = tenantNewRsaKeyId,
-            AesGcmEncryptedKey = keyResponse.SymmetricKeyCipherTextInBytes,
-            IsActive = true,
-        };
-        await _keysRepo.RotateAsync(storageModel, cancellationToken);
+        var newKeyModel = PersistenceTenancyKeyModel.CreateTenantNewKey(tenantId, tenantNewRsaKeyId, keyResponse.SymmetricKeyCipherTextInBytes);
+
+        existingTenantEncryptionModel.Disable();
+        await _keysRepo.UpdateAsync(existingTenantEncryptionModel, cancellationToken);
+        await _keysRepo.AddAsync(newKeyModel, cancellationToken);
+        await _keysRepo.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<byte[]> UnwrapEncryptedKeyAsync(string hsmKeyId, byte[] symmetricEncryptionKey, CancellationToken cancellationToken)
@@ -89,13 +91,8 @@ public class TenancySymmetricKeyService : ITenancySymmetricKeyService
 
     private async Task SaveNewEncryptedSymmetricEncryptionKey(Guid tenantId, string hsmKeyId, GenerateWrappedSymmetricKeyResponse symmetricKey, CancellationToken cancellationToken)
     {
-        var storageModel = new PersistenceTenancyKeyModel()
-        {
-            TenantId = tenantId,
-            HsmKeyId = hsmKeyId,
-            AesGcmEncryptedKey = symmetricKey.SymmetricKeyCipherTextInBytes,
-            IsActive = true,
-        };
+        var storageModel = PersistenceTenancyKeyModel.CreateTenantNewKey(tenantId, hsmKeyId, symmetricKey.SymmetricKeyCipherTextInBytes);
         await _keysRepo.AddAsync(storageModel, cancellationToken);
+        await _keysRepo.SaveChangesAsync(cancellationToken);
     }
 }

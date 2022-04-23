@@ -14,3 +14,10 @@ services:
       PERSIST_ALL: "false"
       LS_LOG: "trace-internal"
       DEBUG: "1"
+  db:
+    container_name: "db"
+    image: postgres:14.2
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: Test@2020

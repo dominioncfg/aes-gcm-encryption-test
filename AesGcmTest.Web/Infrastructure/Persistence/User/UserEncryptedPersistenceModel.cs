@@ -2,9 +2,9 @@
 
 public class UserEncryptedPersistenceModel
 {
-    public Guid TenantId { get; set; }
-    public Guid Id { get; set; }
-    public byte[] EncryptedPayload { get; set; } = Array.Empty<byte>();
+    public Guid TenantId { get; }
+    public Guid Id { get; }
+    public byte[] EncryptedPayload { get; } = Array.Empty<byte>();
 
     private UserEncryptedPersistenceModel(Guid tenantId, Guid id, byte[] encryptedPayload)
     {
@@ -13,10 +13,10 @@ public class UserEncryptedPersistenceModel
         EncryptedPayload = encryptedPayload;
     }
 
+    protected UserEncryptedPersistenceModel() { }
+
     public static UserEncryptedPersistenceModel Create(Guid tenantId, Guid id, byte[] encryptedPayload)
     {
         return new(tenantId, id, encryptedPayload);
     }
 }
-
-
